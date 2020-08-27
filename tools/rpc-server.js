@@ -1,4 +1,5 @@
 const WebSocket = require('ws');
+const util = require('util');
 
 const port = process.env.PORT || 8080;
 const wss = new WebSocket.Server({port});
@@ -18,9 +19,8 @@ function success(ws, result, id) {
     ws.send(JSON.stringify({result, id}));
 }
 
-wss.on('connection', function connection(ws) {
-
-    ws.on('message', function incoming(message) {
+wss.on('connection', (ws) => {
+    ws.on('message', async (message) => {
         const reqObj = JSON.parse(message);
         const id = reqObj['id'];
         const m = rpcMethods[reqObj['method']];
@@ -28,11 +28,17 @@ wss.on('connection', function connection(ws) {
             error(ws, 404, `not found method: ${reqObj['method']}`);
             return;
         }
+
         try {
-            const result = m.apply(null, reqObj.params);
+            let result = null;
+            if (!util.types.isAsyncFunction(m)) {
+                result = m.apply(null, reqObj.params);
+            } else {
+                result = await m.apply(null, reqObj.params);
+            }
             success(ws, result, id);
-        } catch (error) {
-            error(ws, 500, `${error.message}`);
+        } catch (e) {
+            error(ws, 500, `${e.message}`);
         }
     });
 });
