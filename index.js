@@ -38,7 +38,7 @@ module.exports = class RpcClient {
     }
 
     sendCommand(method, params) {
-        const reqId = this.requestId++;
+        const reqId = ++this.requestId;
         const req = {
             id: reqId,
             method,
