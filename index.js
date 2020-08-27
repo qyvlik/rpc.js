@@ -38,23 +38,18 @@ module.exports = class RpcClient {
     }
 
     sendCommand(method, params) {
-        const reqId = ++this.requestId;
-        const req = {
-            id: reqId,
-            method,
-            params
-        };
-        const message = JSON.stringify(req);
+        const id = ++this.requestId;
+        const reqMsg = JSON.stringify({id, method, params});
         const thiz = this;
         return new Promise((resolve, reject) => {
-            thiz.callbacks[reqId] = (resObj) => {
+            thiz.callbacks[id] = (resObj) => {
                 if (resObj['error']) {
                     reject(resObj['error'])
                 } else {
                     resolve(resObj['result']);
                 }
             };
-            thiz.ws.send(message);
+            thiz.ws.send(reqMsg);
         });
     }
 
