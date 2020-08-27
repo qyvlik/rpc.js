@@ -1,5 +1,3 @@
-"use strict";
-
 const WebSocket = require('ws');
 
 module.exports = class RpcClient {
@@ -8,7 +6,7 @@ module.exports = class RpcClient {
         this.requestId = 0;
         this.callbacks = {};
     }
-    
+
     open(wsHost) {
         const thiz = this;
         thiz.ws = new WebSocket(wsHost, {});
@@ -19,7 +17,7 @@ module.exports = class RpcClient {
             try {
                 const jsonRpcLikeResponseObj = JSON.parse(message);
                 const id = jsonRpcLikeResponseObj['id'];
-                if (id) {
+                if (typeof id !== 'undefined') {
                     let callback = thiz.callbacks[id];
                     if (callback && typeof callback === 'function') {
                         delete thiz.callbacks[id];
@@ -60,7 +58,7 @@ module.exports = class RpcClient {
         });
     }
 
-    async ping() {
-        return await this.sendCommand('ping', [Date.now()]);
+    async ping(time) {
+        return await this.sendCommand('ping', [time || Date.now()]);
     }
 };
