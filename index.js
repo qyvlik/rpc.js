@@ -14,20 +14,20 @@ module.exports = class RpcClient {
             console.error('disconnected');
         });
         thiz.ws.on('message', (message) => {
+            let resObj = null;
             try {
-                const jsonRpcLikeResponseObj = JSON.parse(message);
-                const id = jsonRpcLikeResponseObj['id'];
-                if (typeof id !== 'undefined') {
-                    let callback = thiz.callbacks[id];
-                    if (callback && typeof callback === 'function') {
-                        delete thiz.callbacks[id];
-                        callback(jsonRpcLikeResponseObj);
-                    }
-                } else {
-                    console.error("some message not handle:", message);
-                }
+                resObj = JSON.parse(message);
             } catch (error) {
-                console.error("onmessage have some error:", error.message, " data:", message);
+                console.error(`onmessage parse error: message:${message}, ${error.message}`);
+                return;
+            }
+            const callback = thiz.callbacks[resObj['id']];
+            try {
+                callback(resObj);
+            } catch (error) {
+                console.error(`onmessage have some error: ${error.message}, message:${message}`);
+            } finally {
+                delete thiz.callbacks[resObj['id']];
             }
         });
         return new Promise((resolve, reject) => {
